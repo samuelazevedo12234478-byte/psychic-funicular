@@ -26,16 +26,13 @@
         #webcam {
             display: none;
         }
-        
-        /* MODIFICADO: Agora o canvas fica acima de tudo (z-index: 999) e não bloqueia interações físicas */
         #canvas {
             width: 100%;
             height: 100%;
             position: absolute;
             top: 0;
             left: 0;
-            z-index: 999;
-            pointer-events: none; 
+            z-index: 1;
         }
 
         /* --- PAINEL VR FLUTUANTE CENTRALIZADO --- */
@@ -138,7 +135,8 @@
             justify-content: center;
             font-size: 18px;
             pointer-events: none;
-            z-index: 1000; /* MODIFICADO: Pouco acima do canvas para o timer também sobressair */
+            z-index: 100;
+            box-shadow: 0 0 15px #00ffcc;
         }
 
         /* --- JANELA FLUTUANTE (WEB VIEW INTERNA) --- */
@@ -249,7 +247,7 @@
 
         let hoverElement = null;
         let hoverStartTime = null;
-        const TIME_TO_CLICK = 2000; 
+        const TIME_TO_CLICK = 2000; // Reduzido para 2 segundos para ficar mais ágil
 
         function resizeCanvas() {
             canvas.width = window.innerWidth;
@@ -285,12 +283,15 @@
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 const landmarks = results.multiHandLandmarks[0];
 
+                // Desenha a estrutura estável da mão verde neon
                 drawNeonHand(landmarks);
 
+                // Ponta do indicador (Landmark 8)
                 const indexTip = landmarks[8];
                 const fx = indexTip.x * canvas.width;
                 const fy = indexTip.y * canvas.height;
 
+                // Posiciona e atualiza o timer perto do dedo indicador
                 updateVrInteraction(fx, fy);
             } else {
                 resetVrTimer();
@@ -298,6 +299,7 @@
             ctx.restore();
         }
 
+        // Desenha as conexões e articulações em Verde Neon limpo
         function drawNeonHand(landmarks) {
             ctx.strokeStyle = '#00ffcc';
             ctx.lineWidth = 4;
@@ -320,6 +322,7 @@
                 ctx.stroke();
             });
 
+            // Restaura o blur para não borrar os círculos das articulações
             ctx.shadowBlur = 0;
 
             landmarks.forEach((pt) => {
@@ -331,10 +334,12 @@
         }
 
         function updateVrInteraction(x, y) {
+            // Encontra qual elemento sob a ponta do dedo possui a classe interativa
             const element = document.elementFromPoint(x, y);
             const interactiveEl = element ? element.closest('.vr-interactive') : null;
 
             if (interactiveEl) {
+                // Posiciona o contador visual um pouco acima do seu dedo indicador
                 vrTimer.style.display = 'flex';
                 vrTimer.style.left = `${x - 20}px`;
                 vrTimer.style.top = `${y - 60}px`;
@@ -370,6 +375,7 @@
             vrTimer.style.display = 'none';
         }
 
+        // Executa a ação do botão selecionado pelo dedo
         function triggerVrClick(element) {
             const action = element.getAttribute('data-action');
             
@@ -385,12 +391,13 @@
                 browserIframe.src = "";
             }
             else if (action === 'close-panel') {
-                vrPanel.style.opacity = '0.1'; 
+                vrPanel.style.opacity = '0.1'; // Minimiza o menu principal
             }
             else if (action === 'env') {
+                // Altera o feedback visual do card de cenário selecionado
                 element.style.background = 'rgba(0, 255, 200, 0.4)';
                 setTimeout(() => { element.style.background = 'rgba(255, 255, 255, 0.1)'; }, 1000);
-                vrPanel.style.opacity = '1'; 
+                vrPanel.style.opacity = '1'; // Abre novamente o menu se estiver transparente
             }
         }
     </script>
